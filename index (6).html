@@ -1,0 +1,629 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+<meta name="theme-color" content="#7f1d1d" />
+<link rel="manifest" href="manifest.json" />
+<link rel="apple-touch-icon" href="icon-192.png" />
+<title>IMS DSR Daily Balance Ver003</title>
+<style>
+:root{--red:#b91c1c;--red2:#dc2626;--deep:#7f1d1d;--rose:#fff1f2;--bg:#f8fafc;--card:#fff;--text:#1f2937;--muted:#6b7280;--line:#e5e7eb;--green:#15803d;--amber:#b45309;--shadow:0 10px 30px rgba(127,29,29,.09);--radius:16px}
+*{box-sizing:border-box}
+html,body{margin:0;background:linear-gradient(180deg,#fff7f7 0,#f8fafc 32%);color:var(--text);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;-webkit-tap-highlight-color:transparent}
+body{padding-bottom:92px}
+.app{max-width:920px;margin:auto}
+.topbar{position:sticky;top:0;z-index:30;background:rgba(255,255,255,.97);backdrop-filter:blur(12px);border-bottom:1px solid #fee2e2;padding:10px 14px;display:flex;align-items:center;gap:10px}
+.logo{width:46px;height:46px;object-fit:contain;border-radius:10px}
+.brand{min-width:0;flex:1}
+.brand h1{font-size:16px;margin:0;color:#7f1d1d;line-height:1.15;letter-spacing:-.01em}
+.brand p{font-size:11px;margin:3px 0 0;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.statusdot{width:8px;height:8px;border-radius:50%;background:#22c55e;box-shadow:0 0 0 3px #dcfce7;flex-shrink:0}
+.content{padding:14px}
+.section{display:none}
+.section.active{display:block;animation:fade .18s ease}
+@keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+.hero{background:linear-gradient(135deg,#7f1d1d,#dc2626);border-radius:22px;color:white;padding:18px;box-shadow:var(--shadow);position:relative;overflow:hidden}
+.hero:after{content:"";position:absolute;width:170px;height:170px;border-radius:50%;background:rgba(255,255,255,.08);right:-60px;top:-60px}
+.hero:before{content:"";position:absolute;width:100px;height:100px;border-radius:50%;background:rgba(255,255,255,.06);left:-30px;bottom:-40px}
+.hero small{opacity:.85;letter-spacing:.02em;text-transform:uppercase;font-size:10.5px;font-weight:700}
+.hero .date{font-weight:800;font-size:21px;margin:4px 0 14px;position:relative}
+.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;position:relative}
+.kpi{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.22);border-radius:15px;padding:11px 10px;min-width:0}
+.kpi span{display:block;font-size:10px;opacity:.9}
+.kpi strong{display:block;margin-top:6px;font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card{background:var(--card);border:1px solid #f1f5f9;border-radius:18px;padding:15px;margin-top:12px;box-shadow:0 5px 18px rgba(15,23,42,.05)}
+.card h2{margin:0 0 10px;font-size:15.5px;color:#7f1d1d;display:flex;align-items:center;gap:8px;letter-spacing:-.01em}
+.card h2 .ic{width:26px;height:26px;border-radius:9px;background:#fff1f2;display:inline-flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0}
+.card h3{margin:4px 0 10px;font-size:14px}
+.muted{color:var(--muted);font-size:12px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.field{margin-bottom:10px}
+.field label{font-size:11px;font-weight:800;color:#4b5563;display:block;margin-bottom:5px;letter-spacing:.01em}
+.input,.select{width:100%;border:1px solid #d1d5db;border-radius:12px;padding:11px 12px;background:white;font:inherit;font-size:14px;outline:none;transition:border-color .15s,box-shadow .15s}
+.input:focus,.select:focus{border-color:#ef4444;box-shadow:0 0 0 3px #fee2e2}
+.input[readonly]{background:#f8fafc;color:#475569}
+.input.invalid{border-color:#dc2626;box-shadow:0 0 0 3px #fee2e2}
+.btn{border:0;border-radius:12px;padding:11px 14px;font-weight:800;font-size:13px;cursor:pointer;transition:transform .08s,filter .15s;-webkit-user-select:none;user-select:none}
+.btn:active{transform:scale(.97)}
+.btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.btn.primary{background:linear-gradient(135deg,#b91c1c,#ef4444);color:white;box-shadow:0 6px 16px rgba(185,28,28,.25)}
+.btn.soft{background:#fff1f2;color:#9f1239}
+.btn.outline{background:white;color:#991b1b;border:1px solid #fecaca}
+.btn.dark{background:#1f2937;color:#fff}
+.btn.ghost{background:transparent;color:#6b7280;border:1px solid var(--line)}
+.actions{display:flex;gap:8px;flex-wrap:wrap}
+.notice{background:#fff7ed;border:1px solid #fed7aa;color:#9a3412;padding:10px 12px;border-radius:12px;font-size:12px;margin:8px 0;display:flex;gap:8px;align-items:flex-start}
+.notice b{flex-shrink:0}
+.success{background:#f0fdf4;border-color:#bbf7d0;color:#166534}
+.item-card{border:1px solid #fee2e2;border-radius:16px;padding:13px;margin:10px 0;background:#fffafa}
+.item-head{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:9px}
+.item-head strong{color:#7f1d1d;font-size:13.5px}
+.item-head span{font-size:11px;color:#6b7280;background:#fff;border:1px solid #fee2e2;padding:3px 8px;border-radius:999px;white-space:nowrap}
+.row4{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}
+.mini label{display:block;font-size:9.5px;font-weight:800;color:#6b7280;margin-bottom:4px;text-transform:uppercase;letter-spacing:.02em}
+.mini input{width:100%;padding:9px 7px;border:1px solid #d1d5db;border-radius:10px;font-size:12.5px}
+.mini input[readonly]{background:#f8fafc;color:#334155}
+.mini input.invalid{border-color:#dc2626;background:#fef2f2}
+.totals{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+.totalbox{border-radius:14px;padding:11px;background:#f8fafc;border:1px solid var(--line)}
+.totalbox span{font-size:10px;color:var(--muted);display:block}
+.totalbox strong{font-size:15px;display:block;margin-top:4px}
+.totalbox.diff.pos strong{color:#b91c1c}
+.totalbox.diff.zero strong{color:#15803d}
+.payment-row{display:grid;grid-template-columns:.9fr 1fr 1.2fr 1.4fr 1fr auto;gap:7px;margin:7px 0;align-items:end;padding:10px;border:1px solid #f1f5f9;border-radius:12px;background:#fafbfc}
+.payment-row .remove{width:36px;height:40px;border:0;border-radius:10px;background:#fee2e2;color:#991b1b;font-weight:900;cursor:pointer}
+.table-wrap{overflow:auto;border:1px solid var(--line);border-radius:14px}
+.table{width:100%;border-collapse:collapse;min-width:620px}
+.table th,.table td{padding:10px 9px;border-bottom:1px solid #f1f5f9;font-size:12px;text-align:right;white-space:nowrap}
+.table th{background:#fff1f2;color:#7f1d1d;position:sticky;top:0;font-size:11px;text-transform:uppercase;letter-spacing:.02em}
+.table tbody tr:hover{background:#fffafa}
+.table th:first-child,.table td:first-child{text-align:left}
+.table tfoot td{background:#f8fafc;font-weight:800}
+.badge{display:inline-block;padding:4px 8px;border-radius:999px;font-size:10px;font-weight:800}
+.badge.red{background:#fee2e2;color:#991b1b}
+.badge.green{background:#dcfce7;color:#166534}
+.rowbtn{border:0;background:#eef2ff;color:#4338ca;border-radius:8px;padding:4px 9px;font-size:11px;font-weight:800;cursor:pointer;margin-left:5px}
+.rowbtn.del{background:#fee2e2;color:#991b1b}
+.bottomnav{position:fixed;bottom:0;left:0;right:0;z-index:40;background:rgba(255,255,255,.98);border-top:1px solid #fee2e2;display:grid;grid-template-columns:repeat(4,1fr);padding:6px max(8px,env(safe-area-inset-right)) calc(6px + env(safe-area-inset-bottom)) max(8px,env(safe-area-inset-left));box-shadow:0 -8px 25px rgba(127,29,29,.08)}
+.navbtn{border:0;background:transparent;color:#6b7280;padding:7px 2px;font-size:10px;font-weight:700;cursor:pointer;border-radius:10px;transition:color .15s}
+.navbtn b{display:block;font-size:20px;line-height:1;margin-bottom:4px}
+.navbtn.active{color:#b91c1c}
+.empty{text-align:center;padding:26px 14px;color:#94a3b8;font-size:12px}
+.empty .ic{font-size:26px;display:block;margin-bottom:8px;opacity:.6}
+.footer{text-align:center;color:#7f1d1d;font-weight:800;font-size:11px;margin:18px 0 6px}
+.footer span{display:block;color:#9ca3af;font-weight:600;margin-top:2px}
+.dialog{position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:100;display:none;align-items:center;justify-content:center;padding:18px}
+.dialog.show{display:flex}
+.dialogbox{max-width:430px;width:100%;background:white;border-radius:20px;padding:18px;animation:pop .15s ease}
+@keyframes pop{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:none}}
+.dialogbox h3{margin:0 0 8px;color:#7f1d1d;font-size:16px}
+.dialogbox.warn h3{color:#b91c1c}
+.danger{color:#b91c1c}
+.setting-item{display:grid;grid-template-columns:1.2fr .7fr auto;gap:7px;margin:7px 0}
+.iconbtn{border:0;background:#fee2e2;color:#991b1b;border-radius:10px;width:40px;cursor:pointer;font-size:16px}
+.sep{height:1px;background:#f1f5f9;margin:12px 0}
+.toast{position:fixed;bottom:100px;left:50%;transform:translateX(-50%) translateY(20px);background:#1f2937;color:#fff;padding:11px 18px;border-radius:12px;font-size:13px;font-weight:700;z-index:200;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;box-shadow:0 10px 25px rgba(0,0,0,.25);display:flex;align-items:center;gap:8px;max-width:88vw}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast.err{background:#7f1d1d}
+.fileinput{display:none}
+.helptext{font-size:11px;color:#9ca3af;margin-top:4px}
+@media(max-width:520px){.content{padding:10px}.topbar{padding:8px 10px}.logo{width:42px;height:42px}.kpis{gap:6px}.kpi{padding:10px 7px}.kpi strong{font-size:13px}.grid2{grid-template-columns:1fr}.row4{grid-template-columns:repeat(2,1fr)}.payment-row{grid-template-columns:1fr 1fr}.payment-row .pay-comment{grid-column:1 / -1}.payment-row .remove{grid-column:2;justify-self:end}.totals{grid-template-columns:1fr}.hero{border-radius:18px}.card{border-radius:16px;padding:12px}}
+</style>
+</head>
+<body>
+<div class="app">
+<header class="topbar">
+  <img class="logo" src="logo.png" alt="IMS Apps" onerror="this.style.display='none'">
+  <div class="brand"><h1>DSR Daily Balance</h1><p id="brandSub">IMS Apps • Daily Sales &amp; Payment Control</p></div>
+  <span class="statusdot" title="Data saved on this device"></span>
+</header>
+<main class="content">
+
+<section id="dashboard" class="section active">
+  <div class="hero">
+    <small>Last saved day</small>
+    <div class="date" id="dashDate">No data yet</div>
+    <div class="kpis">
+      <div class="kpi"><span>Sales Amount</span><strong id="dashSales">0.00</strong></div>
+      <div class="kpi"><span>Payment Value</span><strong id="dashPaid">0.00</strong></div>
+      <div class="kpi"><span>Short / Difference</span><strong id="dashDiff">0.00</strong></div>
+    </div>
+  </div>
+  <div class="card">
+    <h2><span class="ic">🏢</span>Business Snapshot</h2>
+    <div class="grid2"><div><div class="muted">BDE Name</div><strong id="dashBde">Not set</strong></div><div><div class="muted">Territory</div><strong id="dashTerr">Not set</strong></div></div>
+    <div class="sep"></div>
+    <div class="muted" id="dashInfo">Set BDE, Territory, Items and Rates in Settings, then enter the first day's opening stock.</div>
+  </div>
+  <div class="card" id="dashQuickCard">
+    <h2><span class="ic">⚡</span>Quick Actions</h2>
+    <div class="actions">
+      <button class="btn primary" data-target="entry">＋ New Daily Entry</button>
+      <button class="btn soft" data-target="reports">▤ View Reports</button>
+    </div>
+  </div>
+</section>
+
+<section id="entry" class="section">
+  <div class="card">
+    <h2><span class="ic">📅</span>Data Entry</h2>
+    <div class="field"><label>Date</label><input id="entryDate" class="input" type="date"></div>
+    <div id="entryNotice" class="notice"><b>ℹ️</b><span>Opening stock is entered manually only for the first record of each item. Later opening stock is automatically taken from the previous saved day's closing stock.</span></div>
+    <div id="itemsWrap"></div>
+  </div>
+  <div class="card">
+    <h2><span class="ic">💳</span>Payments</h2>
+    <div class="muted">Add one or more payment entries. Paid Value is calculated automatically.</div>
+    <div id="paymentWrap"></div>
+    <button class="btn soft" id="addPaymentBtn" type="button">+ Add Payment</button>
+  </div>
+  <div class="card">
+    <h2><span class="ic">📊</span>Daily Totals</h2>
+    <div class="totals">
+      <div class="totalbox"><span>Sales Amount</span><strong id="entrySales">0.00</strong></div>
+      <div class="totalbox"><span>Paid Value</span><strong id="entryPaid">0.00</strong></div>
+      <div class="totalbox diff" id="diffBox"><span>Short / Difference</span><strong id="entryDiff">0.00</strong></div>
+    </div>
+    <div style="margin-top:12px" class="actions">
+      <button class="btn primary" id="saveDayBtn">💾 Save Daily Balance</button>
+      <button class="btn outline" id="clearFormBtn">↺ Reset Form</button>
+    </div>
+  </div>
+</section>
+
+<section id="reports" class="section">
+  <div class="card">
+    <h2><span class="ic">📈</span>Date Range Report</h2>
+    <div class="grid2">
+      <div class="field"><label>From Date</label><input id="fromDate" class="input" type="date"></div>
+      <div class="field"><label>To Date</label><input id="toDate" class="input" type="date"></div>
+    </div>
+    <div class="actions"><button class="btn primary" id="viewRangeBtn">View Report</button></div>
+    <div style="margin-top:10px" class="table-wrap">
+      <table class="table">
+        <thead><tr><th>Date</th><th>Sales Amount</th><th>Paid Value</th><th>Short / Difference</th><th></th></tr></thead>
+        <tbody id="rangeBody"></tbody>
+      </table>
+    </div>
+  </div>
+  <div class="card">
+    <h2><span class="ic">📋</span>Daily Summary</h2>
+    <div class="grid2">
+      <div class="field"><label>Select Date</label><input id="summaryDate" class="input" type="date"></div>
+      <div class="field" style="align-self:end"><button class="btn primary" id="viewSummaryBtn" style="width:100%">View Daily Summary</button></div>
+    </div>
+    <div id="dailySummaryOut" class="empty"><span class="ic">🗂️</span>Select a saved date to view the item-wise balance sheet.</div>
+  </div>
+  <div class="card">
+    <h2><span class="ic">💰</span>Payment Report</h2>
+    <div class="grid2">
+      <div class="field"><label>From Date</label><input id="payFrom" class="input" type="date"></div>
+      <div class="field"><label>To Date</label><input id="payTo" class="input" type="date"></div>
+    </div>
+    <button class="btn primary" id="viewPayBtn">View Payment Report</button>
+    <div style="margin-top:10px" class="table-wrap">
+      <table class="table">
+        <thead><tr><th>Date</th><th>Bank Date</th><th>Method</th><th>Reference</th><th>Comment</th><th>Amount</th></tr></thead>
+        <tbody id="paymentReportBody"></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section id="settings" class="section">
+  <div class="card">
+    <h2><span class="ic">👤</span>Profile</h2>
+    <div class="grid2">
+      <div class="field"><label>BDE Name</label><input id="bdeName" class="input" placeholder="Enter BDE name"></div>
+      <div class="field"><label>Territory</label><input id="territory" class="input" placeholder="Enter territory"></div>
+    </div>
+    <button class="btn primary" id="saveProfileBtn">Save Profile</button>
+  </div>
+  <div class="card">
+    <h2><span class="ic">📦</span>Items &amp; Rates</h2>
+    <div class="muted">The default items and rates are based on the uploaded Daily Balance Sheet. You can edit, add, or remove items before daily entries are recorded.</div>
+    <div id="settingsItems"></div>
+    <div class="actions"><button class="btn soft" id="addItemBtn">+ Add Item</button><button class="btn primary" id="saveItemsBtn">Save Items</button></div>
+  </div>
+  <div class="card">
+    <h2><span class="ic">💾</span>Backup &amp; Restore</h2>
+    <div class="muted">Download all settings, daily balances, payment details and activity history as one backup file. Keep regular backups — data is stored only on this device.</div>
+    <div style="margin-top:10px" class="actions">
+      <button class="btn dark" id="backupBtn">⬇ Download Backup</button>
+      <button class="btn outline" id="restoreBtn">⬆ Restore from Backup</button>
+    </div>
+    <input type="file" id="restoreFile" class="fileinput" accept="application/json,.json">
+    <div class="helptext" id="lastBackupInfo"></div>
+  </div>
+  <div class="card">
+    <h2><span class="ic">⚠️</span>Danger Zone</h2>
+    <div class="muted">This permanently deletes every saved daily record, payment and item on this device. This cannot be undone unless you restore from a backup.</div>
+    <div style="margin-top:10px" class="actions"><button class="btn outline" id="resetAllBtn" style="color:#b91c1c;border-color:#fecaca">Erase All Data</button></div>
+  </div>
+  <div class="footer">Powered By: IMS Apps - 0774422444<span>Ver003 · Isuru_Srinath</span></div>
+</section>
+
+</main>
+</div>
+
+<nav class="bottomnav">
+  <button class="navbtn active" data-target="dashboard"><b>⌂</b>Dashboard</button>
+  <button class="navbtn" data-target="entry"><b>＋</b>Data Entry</button>
+  <button class="navbtn" data-target="reports"><b>▤</b>Reports</button>
+  <button class="navbtn" data-target="settings"><b>⚙</b>Settings</button>
+</nav>
+
+<div id="dlg" class="dialog">
+  <div class="dialogbox" id="dlgBox">
+    <h3 id="dlgTitle">Message</h3>
+    <div id="dlgText" class="muted"></div>
+    <div class="actions" style="margin-top:14px;justify-content:flex-end" id="dlgActions">
+      <button class="btn ghost" id="dlgCancel" style="display:none">Cancel</button>
+      <button class="btn primary" id="dlgOk">OK</button>
+    </div>
+  </div>
+</div>
+<div id="toast" class="toast"></div>
+
+<script>
+const KEY='ims_dsr_daily_balance_v1';
+const defaultState={version:2,profile:{bdeName:'',territory:''},items:[{id:'kit100',name:'KIT-100',rate:96},{id:'mbb159',name:'MBB-159',rate:152.6},{id:'simgsm',name:'SIM GSM',rate:100},{id:'onewallet',name:'One Wallet',rate:1}],days:{},activity:[]};
+let state=loadState(); let formPayments=[];
+
+function loadState(){
+  try{
+    let x=JSON.parse(localStorage.getItem(KEY));
+    if(x&&x.version){
+      if(!Array.isArray(x.activity))x.activity=[];
+      if(!x.items)x.items=[];
+      if(!x.days)x.days={};
+      if(!x.profile)x.profile={bdeName:'',territory:''};
+      return x;
+    }
+  }catch(e){}
+  return structuredClone(defaultState);
+}
+function saveState(){
+  try{ localStorage.setItem(KEY,JSON.stringify(state)); return true; }
+  catch(e){ toast('Save failed — device storage may be full.',true); return false; }
+}
+function log(action,detail){state.activity.push({timestamp:new Date().toISOString(),action,detail}); if(state.activity.length>3000)state.activity=state.activity.slice(-3000); saveState()}
+function money(v){return Number(v||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}
+function n(v){let x=parseFloat(v);return Number.isFinite(x)?x:0}
+function id(s){return document.getElementById(s)}
+function today(){let d=new Date();let z=d.getTimezoneOffset();return new Date(d-z*60000).toISOString().slice(0,10)}
+function niceDate(s){if(!s)return 'No data yet';let d=new Date(s+'T00:00:00');return d.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'})}
+function sortedDates(){return Object.keys(state.days).sort()}
+function firstAfter(date){return sortedDates().find(d=>d>date)||null}
+function latestBefore(date){return sortedDates().filter(d=>d<date).pop()||null}
+function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
+
+/* ---------- Toast ---------- */
+let toastTimer=null;
+function toast(msg,isErr){
+  let t=id('toast');
+  t.textContent=msg;
+  t.className='toast show'+(isErr?' err':'');
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>t.classList.remove('show'),2600);
+}
+
+/* ---------- Dialog (message + confirm) ---------- */
+function showMsg(title,text){
+  id('dlgBox').classList.remove('warn');
+  id('dlgTitle').textContent=title;id('dlgText').textContent=text;
+  id('dlgCancel').style.display='none';
+  id('dlgOk').textContent='OK';
+  id('dlgOk').onclick=()=>id('dlg').classList.remove('show');
+  id('dlg').classList.add('show');
+}
+function showConfirm(title,text,onConfirm,okLabel){
+  id('dlgBox').classList.add('warn');
+  id('dlgTitle').textContent=title;id('dlgText').textContent=text;
+  id('dlgCancel').style.display='inline-block';
+  id('dlgOk').textContent=okLabel||'Confirm';
+  id('dlgCancel').onclick=()=>id('dlg').classList.remove('show');
+  id('dlgOk').onclick=()=>{id('dlg').classList.remove('show');onConfirm()};
+  id('dlg').classList.add('show');
+}
+id('dlg').addEventListener('click',e=>{if(e.target.id==='dlg')id('dlg').classList.remove('show')});
+
+/* ---------- Navigation ---------- */
+function go(target){
+  document.querySelectorAll('.section').forEach(s=>s.classList.toggle('active',s.id===target));
+  document.querySelectorAll('.navbtn').forEach(b=>b.classList.toggle('active',b.dataset.target===target));
+  if(target==='dashboard')renderDashboard();
+  if(target==='entry')renderEntry();
+  if(target==='reports')refreshReports();
+  if(target==='settings')renderSettings();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+document.querySelectorAll('[data-target]').forEach(b=>b.addEventListener('click',()=>go(b.dataset.target)));
+
+/* ---------- Dashboard ---------- */
+function renderDashboard(){
+  let ds=sortedDates(), last=ds.at(-1), rec=last?state.days[last]:null;
+  id('dashDate').textContent=last?niceDate(last):'No data yet';
+  id('dashSales').textContent=money(rec?.salesTotal);
+  id('dashPaid').textContent=money(rec?.paidTotal);
+  id('dashDiff').textContent=money(rec?.difference);
+  id('dashBde').textContent=state.profile.bdeName||'Not set';
+  id('dashTerr').textContent=state.profile.territory||'Not set';
+  id('brandSub').textContent=(state.profile.bdeName||'IMS Apps')+(state.profile.territory?' • '+state.profile.territory:' • Daily Sales & Payment Control');
+  id('dashInfo').textContent=last?`${state.items.length} item(s) configured • ${ds.length} saved day(s)`:'Set BDE, Territory, Items and Rates in Settings, then enter the first day\'s opening stock.';
+}
+
+/* ---------- Data Entry ---------- */
+function getOpeningFor(item,date){
+  if(state.days[date]?.items?.[item.id])return state.days[date].items[item.id].opening;
+  let p=latestBefore(date);
+  if(p&&state.days[p]?.items?.[item.id])return state.days[p].items[item.id].closing;
+  return null;
+}
+function renderEntry(){
+  let date=id('entryDate').value||today();
+  id('entryDate').value=date;
+  let existing=state.days[date];
+  formPayments=existing?JSON.parse(JSON.stringify(existing.payments||[])):[];
+  let wrap=id('itemsWrap');wrap.innerHTML='';
+  if(!state.items.length){wrap.innerHTML='<div class="empty"><span class="ic">📦</span>No items configured. Add items in Settings first.</div>';renderPayments();calcEntry();return}
+  let nextDay=firstAfter(date);
+  if(nextDay){
+    id('entryNotice').innerHTML='<b>⚠️</b><span>You are editing a <strong>backdated</strong> entry. A record already exists for '+niceDate(nextDay)+'. If you change Closing Stock here, re-open and re-save '+niceDate(nextDay)+' afterwards so its Opening Stock stays in sync.</span>';
+  } else {
+    id('entryNotice').innerHTML='<b>ℹ️</b><span>Opening stock is entered manually only for the first record of each item. Later opening stock is automatically taken from the previous saved day\'s closing stock.</span>';
+  }
+  state.items.forEach(it=>{
+    let rec=existing?.items?.[it.id];
+    let opening=rec?rec.opening:getOpeningFor(it,date);
+    let first=opening===null;
+    let purchase=rec?.purchase??0, closing=rec?.closing??'';
+    let total=n(opening)+n(purchase),sold=total-n(closing),value=sold*n(it.rate);
+    let el=document.createElement('div');el.className='item-card';el.dataset.itemId=it.id;
+    el.innerHTML=`<div class="item-head"><strong>${esc(it.name)}</strong><span>Rate: ${money(it.rate)}</span></div>
+    <div class="row4">
+      <div class="mini"><label>Opening Stock</label><input class="opening" type="number" step="any" value="${opening??''}" ${first?'':'readonly'} placeholder="${first?'First day only':'Auto'}"></div>
+      <div class="mini"><label>Purchasing</label><input class="purchase" type="number" step="any" value="${purchase}"></div>
+      <div class="mini"><label>Total</label><input class="total" readonly value="${money(total)}"></div>
+      <div class="mini"><label>Closing Stock</label><input class="closing" type="number" step="any" value="${closing}"></div>
+    </div>
+    <div class="row4" style="margin-top:7px">
+      <div class="mini"><label>Sold Qty</label><input class="sold" readonly value="${money(sold)}"></div>
+      <div class="mini"><label>Rate</label><input readonly value="${money(it.rate)}"></div>
+      <div class="mini" style="grid-column:span 2"><label>Sales Value</label><input class="value" readonly value="${money(value)}"></div>
+    </div>`;
+    wrap.appendChild(el);
+  });
+  wrap.querySelectorAll('input').forEach(x=>x.addEventListener('input',calcEntry));
+  renderPayments();calcEntry();
+}
+function renderPayments(){
+  let w=id('paymentWrap');w.innerHTML='';
+  if(!formPayments.length)formPayments=[{method:'Bank',bankDate:'',reference:'',comment:'',amount:''}];
+  formPayments.forEach((p,i)=>{
+    let e=document.createElement('div');e.className='payment-row';
+    e.innerHTML=`<div><label class="muted">Method</label><select class="select pm" data-i="${i}"><option ${p.method==='Bank'?'selected':''}>Bank</option><option ${p.method==='Cash'?'selected':''}>Cash</option><option ${p.method==='Other'?'selected':''}>Other</option></select></div>
+    <div><label class="muted">Bank Date</label><input class="input pbd" data-i="${i}" type="date" value="${esc(p.bankDate||'')}"></div>
+    <div><label class="muted">Reference</label><input class="input pr" data-i="${i}" value="${esc(p.reference||'')}" placeholder="Optional"></div>
+    <div class="pay-comment"><label class="muted">Comment</label><input class="input pc" data-i="${i}" value="${esc(p.comment||'')}" placeholder="Enter comment"></div>
+    <div><label class="muted">Amount</label><input class="input pa" data-i="${i}" type="number" step="any" value="${p.amount??''}" placeholder="0.00"></div>
+    <button class="remove" data-i="${i}" type="button" title="Remove">×</button>`;
+    w.appendChild(e);
+  });
+  w.querySelectorAll('.pm,.pbd,.pr,.pc,.pa').forEach(x=>x.addEventListener('input',syncPayments));
+  w.querySelectorAll('.remove').forEach(b=>b.addEventListener('click',()=>{
+    syncPayments();
+    formPayments.splice(+b.dataset.i,1);
+    renderPayments();calcEntry();
+  }));
+}
+function syncPayments(){
+  document.querySelectorAll('.payment-row').forEach((r,i)=>{
+    formPayments[i]={method:r.querySelector('.pm').value,bankDate:r.querySelector('.pbd').value,reference:r.querySelector('.pr').value.trim(),comment:r.querySelector('.pc').value.trim(),amount:r.querySelector('.pa').value};
+  });
+  calcEntry();
+}
+id('addPaymentBtn').addEventListener('click',()=>{syncPayments();formPayments.push({method:'Bank',bankDate:'',reference:'',comment:'',amount:''});renderPayments();calcEntry()});
+
+function calcEntry(){
+  let sales=0,hasInvalid=false;
+  document.querySelectorAll('.item-card').forEach(c=>{
+    let op=n(c.querySelector('.opening').value),pu=n(c.querySelector('.purchase').value),cl=n(c.querySelector('.closing').value);
+    let tot=op+pu,sold=tot-cl;
+    let it=state.items.find(x=>x.id===c.dataset.itemId),val=sold*n(it?.rate);
+    c.querySelector('.total').value=money(tot);
+    c.querySelector('.sold').value=money(sold);
+    c.querySelector('.value').value=money(val);
+    let closingInput=c.querySelector('.closing');
+    if(sold<0){closingInput.classList.add('invalid');hasInvalid=true;} else {closingInput.classList.remove('invalid');}
+    sales+=val;
+  });
+  let paid=formPayments.reduce((a,p)=>a+n(p.amount),0),diff=sales-paid;
+  id('entrySales').textContent=money(sales);
+  id('entryPaid').textContent=money(paid);
+  id('entryDiff').textContent=money(diff);
+  id('diffBox').className='totalbox diff '+(Math.abs(diff)<.005?'zero':'pos');
+  return{sales,paid,diff,hasInvalid};
+}
+id('entryDate').addEventListener('change',renderEntry);
+id('clearFormBtn').addEventListener('click',()=>{
+  showConfirm('Reset form?','This will discard any unsaved changes on this screen and reload the entry for the selected date.',()=>renderEntry(),'Reset');
+});
+
+function doSaveDay(){
+  let date=id('entryDate').value;
+  if(!date)return showMsg('Date required','Please select a date.');
+  if(!state.items.length)return showMsg('No items','Add at least one item in Settings.');
+  let items={},bad='';
+  document.querySelectorAll('.item-card').forEach(c=>{
+    let it=state.items.find(x=>x.id===c.dataset.itemId),op=c.querySelector('.opening').value,pu=c.querySelector('.purchase').value,cl=c.querySelector('.closing').value;
+    if(op===''||cl==='')bad=it.name;
+    let opening=n(op),purchase=n(pu),closing=n(cl),total=opening+purchase,sold=total-closing;
+    if(sold<0)bad=it.name;
+    items[it.id]={name:it.name,opening,purchase,total,closing,soldQty:sold,rate:n(it.rate),salesValue:sold*n(it.rate)};
+  });
+  if(bad)return showMsg('Check stock values',`Please check Opening / Closing stock for ${bad}. Closing stock cannot exceed total stock, and both fields are required.`);
+  syncPayments();
+  let t=calcEntry();
+  let cleanPayments=formPayments.filter(p=>n(p.amount)!==0||p.reference||p.comment||p.bankDate).map(p=>({method:p.method,bankDate:p.bankDate||'',reference:p.reference,comment:p.comment||'',amount:n(p.amount)}));
+  let wasExisting=!!state.days[date];
+  state.days[date]={
+    date,items,payments:cleanPayments,
+    salesTotal:t.sales,paidTotal:t.paid,difference:t.diff,
+    createdAt:state.days[date]?.createdAt||new Date().toISOString(),
+    updatedAt:new Date().toISOString()
+  };
+  log(wasExisting?'UPDATE_DAY':'SAVE_DAY',{date,sales:t.sales,paid:t.paid,difference:t.diff});
+  if(!saveState())return;
+  let nextDay=firstAfter(date);
+  toast(nextDay?`Saved. Remember to re-check ${niceDate(nextDay)}.`:'Daily balance saved.');
+  showMsg('Saved',`${niceDate(date)} daily balance saved successfully.`+(nextDay?` A later record exists for ${niceDate(nextDay)} — please re-open and re-save it so its Opening Stock reflects today's Closing Stock.`:''));
+  renderDashboard();
+}
+id('saveDayBtn').addEventListener('click',()=>{
+  let date=id('entryDate').value;
+  if(date&&state.days[date]){
+    showConfirm('Overwrite existing record?',`A daily balance for ${niceDate(date)} already exists. Saving will overwrite it.`,doSaveDay,'Save & Overwrite');
+  } else {
+    doSaveDay();
+  }
+});
+
+/* ---------- Reports ---------- */
+function refreshReports(){
+  let ds=sortedDates();
+  if(ds.length){
+    id('fromDate').value=id('fromDate').value||ds[0];
+    id('toDate').value=id('toDate').value||ds.at(-1);
+    id('summaryDate').value=id('summaryDate').value||ds.at(-1);
+    id('payFrom').value=id('payFrom').value||ds[0];
+    id('payTo').value=id('payTo').value||ds.at(-1);
+  }
+  renderRange();renderPaymentReport();
+}
+function renderRange(){
+  let f=id('fromDate').value||'0000-00-00',t=id('toDate').value||'9999-99-99';
+  let rows=sortedDates().filter(d=>d>=f&&d<=t).map(d=>state.days[d]);
+  id('rangeBody').innerHTML=rows.length?rows.map(r=>`<tr><td>${niceDate(r.date)}</td><td>${money(r.salesTotal)}</td><td>${money(r.paidTotal)}</td><td><span class="badge ${Math.abs(r.difference)<.005?'green':'red'}">${money(r.difference)}</span></td><td><button class="rowbtn" data-view="${r.date}">View</button><button class="rowbtn del" data-del="${r.date}">Delete</button></td></tr>`).join(''):'<tr><td colspan="5" class="empty">No records in selected range.</td></tr>';
+  id('rangeBody').querySelectorAll('[data-view]').forEach(b=>b.addEventListener('click',()=>{id('summaryDate').value=b.dataset.view;id('viewSummaryBtn').click();id('dailySummaryOut').scrollIntoView({behavior:'smooth',block:'center'})}));
+  id('rangeBody').querySelectorAll('[data-del]').forEach(b=>b.addEventListener('click',()=>{
+    let d=b.dataset.del;
+    showConfirm('Delete this day\'s record?',`This permanently deletes the daily balance and payments saved for ${niceDate(d)}. This cannot be undone unless you have a backup.`,()=>{
+      delete state.days[d];
+      log('DELETE_DAY',{date:d});
+      saveState();
+      toast('Record deleted.');
+      refreshReports();renderDashboard();
+    },'Delete');
+  }));
+}
+id('viewRangeBtn').addEventListener('click',renderRange);
+id('viewSummaryBtn').addEventListener('click',()=>{
+  let d=id('summaryDate').value,r=state.days[d],o=id('dailySummaryOut');
+  if(!r){o.className='empty';o.innerHTML='<span class="ic">🗂️</span>No saved record for this date.';return}
+  let rows=state.items.map(it=>r.items[it.id]).filter(Boolean);
+  o.className='';
+  o.innerHTML=`<div class="table-wrap"><table class="table"><thead><tr><th>Item Name</th><th>Opening Stock</th><th>Purchasing</th><th>Total</th><th>Closing Stock</th><th>Total Sales (QTY)</th><th>Rate</th><th>Value</th></tr></thead><tbody>${rows.map(x=>`<tr><td>${esc(x.name)}</td><td>${money(x.opening)}</td><td>${money(x.purchase)}</td><td>${money(x.total)}</td><td>${money(x.closing)}</td><td>${money(x.soldQty)}</td><td>${money(x.rate)}</td><td>${money(x.salesValue)}</td></tr>`).join('')}</tbody><tfoot><tr><td colspan="7">Today Sales Value</td><td>${money(r.salesTotal)}</td></tr></tfoot></table></div>
+  <div class="totals"><div class="totalbox"><span>Sales Amount</span><strong>${money(r.salesTotal)}</strong></div><div class="totalbox"><span>Paid Value</span><strong>${money(r.paidTotal)}</strong></div><div class="totalbox diff ${Math.abs(r.difference)<.005?'zero':'pos'}"><span>Short / Difference</span><strong>${money(r.difference)}</strong></div></div>`;
+});
+function renderPaymentReport(){
+  let f=id('payFrom').value||'0000-00-00',t=id('payTo').value||'9999-99-99',rows=[];
+  sortedDates().filter(d=>d>=f&&d<=t).forEach(d=>(state.days[d].payments||[]).forEach(p=>rows.push({date:d,...p})));
+  let total=rows.reduce((a,p)=>a+n(p.amount),0);
+  id('paymentReportBody').innerHTML=rows.length?rows.map(p=>`<tr><td>${niceDate(p.date)}</td><td>${p.bankDate?niceDate(p.bankDate):'-'}</td><td>${esc(p.method)}</td><td>${esc(p.reference||'-')}</td><td>${esc(p.comment||'-')}</td><td>${money(p.amount)}</td></tr>`).join('')+`<tr><td colspan="5">Total</td><td>${money(total)}</td></tr>`:'<tr><td colspan="6" class="empty">No payment entries in selected range.</td></tr>';
+}
+id('viewPayBtn').addEventListener('click',renderPaymentReport);
+
+/* ---------- Settings ---------- */
+function renderSettings(){
+  id('bdeName').value=state.profile.bdeName||'';
+  id('territory').value=state.profile.territory||'';
+  let w=id('settingsItems');w.innerHTML='';
+  state.items.forEach((it,i)=>{
+    let e=document.createElement('div');e.className='setting-item';
+    e.innerHTML=`<input class="input sin" data-i="${i}" value="${esc(it.name)}" placeholder="Item"><input class="input sir" data-i="${i}" type="number" step="any" value="${it.rate}" placeholder="Rate"><button class="iconbtn sdel" data-i="${i}" type="button" title="Remove item">×</button>`;
+    w.appendChild(e);
+  });
+  w.querySelectorAll('.sdel').forEach(b=>b.addEventListener('click',()=>{
+    let it=state.items[+b.dataset.i];
+    let used=Object.values(state.days).some(d=>d.items&&d.items[it.id]);
+    if(used)return showMsg('Item is in use','This item already exists in saved daily records and cannot be removed.');
+    showConfirm('Remove this item?',`Remove "${it.name||'this item'}" from the item list?`,()=>{state.items.splice(+b.dataset.i,1);renderSettings()},'Remove');
+  }));
+}
+id('saveProfileBtn').addEventListener('click',()=>{
+  state.profile={bdeName:id('bdeName').value.trim(),territory:id('territory').value.trim()};
+  log('UPDATE_PROFILE',state.profile);
+  toast('Profile saved.');
+  showMsg('Saved','BDE Name and Territory saved.');
+  renderDashboard();
+});
+id('addItemBtn').addEventListener('click',()=>{state.items.push({id:'item_'+Date.now(),name:'',rate:0});renderSettings()});
+id('saveItemsBtn').addEventListener('click',()=>{
+  let names=[...document.querySelectorAll('.sin')],rates=[...document.querySelectorAll('.sir')];
+  let bad=false;
+  names.forEach((x,i)=>{let nm=x.value.trim();if(!nm)bad=true;state.items[i].name=nm;state.items[i].rate=n(rates[i].value)});
+  if(bad)return showMsg('Check items','Every item must have an Item Name.');
+  log('UPDATE_ITEMS',{count:state.items.length});
+  if(!saveState())return;
+  toast('Items saved.');
+  showMsg('Saved','Items and rates saved.');
+  renderSettings();
+});
+
+/* ---------- Backup / Restore ---------- */
+id('backupBtn').addEventListener('click',()=>{
+  log('BACKUP_DOWNLOAD',{days:sortedDates().length});
+  let payload={app:'IMS DSR Daily Balance',exportedAt:new Date().toISOString(),data:state};
+  let blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}),a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);a.download=`IMS_DSR_Backup_${today()}.json`;a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),500);
+  localStorage.setItem(KEY+'_lastbackup',new Date().toISOString());
+  showLastBackup();
+  toast('Backup downloaded.');
+});
+id('restoreBtn').addEventListener('click',()=>id('restoreFile').click());
+id('restoreFile').addEventListener('change',e=>{
+  let file=e.target.files[0];if(!file)return;
+  let reader=new FileReader();
+  reader.onload=()=>{
+    let parsed;
+    try{ parsed=JSON.parse(reader.result); }
+    catch(err){ showMsg('Invalid file','This does not look like a valid backup file (could not read JSON).'); e.target.value=''; return; }
+    let incoming=parsed && parsed.data && parsed.data.version ? parsed.data : (parsed && parsed.version ? parsed : null);
+    if(!incoming){ showMsg('Invalid backup','This file does not match the expected IMS DSR Daily Balance backup format.'); e.target.value=''; return; }
+    let dayCount=Object.keys(incoming.days||{}).length;
+    showConfirm('Restore from backup?',`This will replace ALL current data on this device with the backup (${dayCount} saved day(s)). Your current data will be lost unless you have downloaded it separately. Continue?`,()=>{
+      state=incoming;
+      if(!Array.isArray(state.activity))state.activity=[];
+      log('RESTORE_BACKUP',{days:dayCount});
+      saveState();
+      toast('Backup restored.');
+      renderDashboard();go('dashboard');
+    },'Restore & Replace');
+    e.target.value='';
+  };
+  reader.readAsText(file);
+});
+function showLastBackup(){
+  let t=localStorage.getItem(KEY+'_lastbackup');
+  id('lastBackupInfo').textContent=t?('Last backup downloaded: '+new Date(t).toLocaleString('en-GB')):'No backup downloaded yet on this device.';
+}
+id('resetAllBtn').addEventListener('click',()=>{
+  showConfirm('Erase all data?','This permanently deletes every profile setting, item, daily record and payment on this device. This cannot be undone. Make sure you have downloaded a backup first.',()=>{
+    state=structuredClone(defaultState);
+    saveState();
+    toast('All data erased.');
+    renderDashboard();go('dashboard');
+  },'Erase Everything');
+});
+
+/* ---------- Init ---------- */
+if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}))}
+id('entryDate').value=today();
+showLastBackup();
+renderDashboard();
+</script>
+</body>
+</html>

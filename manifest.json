@@ -1,0 +1,21 @@
+{
+  "name": "IMS DSR Daily Balance Ver002",
+  "short_name": "DSR Balance",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#fff7f7",
+  "theme_color": "#b91c1c",
+  "description": "Mobile friendly DSR daily balance and payment tracker by IMS Apps.",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

@@ -241,6 +241,24 @@ body{padding-bottom:96px}
       </table>
     </div>
   </div>
+  <div class="card">
+    <h2><span class="ic">⚖️</span>Cumulative Outstanding / Excess Report</h2>
+    <div class="muted">Running balance of Short (Outstanding) vs Excess across all saved days. The starting balance is set once in Settings, then each day's Short/Difference rolls forward automatically — like Opening Stock.</div>
+    <div class="totals" style="grid-template-columns:1fr">
+      <div class="totalbox diff" id="cumuNowBox"><span>Current Cumulative Balance</span><strong id="cumuNowVal">0.00</strong></div>
+    </div>
+    <div class="grid2" style="margin-top:10px">
+      <div class="field"><label>From Date</label><input id="cumuFrom" class="input" type="date"></div>
+      <div class="field"><label>To Date</label><input id="cumuTo" class="input" type="date"></div>
+    </div>
+    <button class="btn primary" id="viewCumuBtn">View Cumulative Report</button>
+    <div style="margin-top:10px" class="table-wrap">
+      <table class="table">
+        <thead><tr><th>Date</th><th>Daily Short/Excess</th><th>Cumulative Balance</th></tr></thead>
+        <tbody id="cumuBody"></tbody>
+      </table>
+    </div>
+  </div>
 </section>
 
 <section id="settings" class="section">
@@ -251,6 +269,18 @@ body{padding-bottom:96px}
       <div class="field"><label>Territory</label><input id="territory" class="input" placeholder="Enter territory"></div>
     </div>
     <button class="btn primary" id="saveProfileBtn">Save Profile</button>
+  </div>
+  <div class="card">
+    <h2><span class="ic">⚖️</span>Outstanding / Excess — Opening Balance</h2>
+    <div class="muted" id="cumuSettingHelp">This is the starting Cumulative Outstanding (short) or Excess balance, entered manually only once — like Opening Stock. After that, each saved day's Short/Difference rolls forward automatically and this field becomes locked.</div>
+    <div class="field" style="margin-top:10px">
+      <label>Opening Balance (use negative for Excess, positive for Outstanding)</label>
+      <input id="balanceOpening" class="input" type="number" step="any" placeholder="e.g. 0.00">
+    </div>
+    <div class="actions">
+      <button class="btn primary" id="saveOpeningBalanceBtn">Save Opening Balance</button>
+      <button class="btn outline" id="unlockOpeningBalanceBtn" style="display:none">🔓 Unlock &amp; Edit</button>
+    </div>
   </div>
   <div class="card">
     <h2><span class="ic">📦</span>Items &amp; Rates</h2>
@@ -320,7 +350,7 @@ const defaultBanks=[
   {id:'bank_cash',label:'Cash'},
   {id:'bank_other',label:'Other'}
 ];
-const defaultState={version:3,profile:{bdeName:'',territory:'',adminPhone:''},items:[{id:'kit100',name:'KIT-100',rate:96},{id:'mbb159',name:'MBB-159',rate:152.6},{id:'simgsm',name:'SIM GSM',rate:100},{id:'onewallet',name:'One Wallet',rate:1}],banks:JSON.parse(JSON.stringify(defaultBanks)),days:{},activity:[]};
+const defaultState={version:4,profile:{bdeName:'',territory:'',adminPhone:''},balanceOpening:null,items:[{id:'kit100',name:'KIT-100',rate:96},{id:'mbb159',name:'MBB-159',rate:152.6},{id:'simgsm',name:'SIM GSM',rate:100},{id:'onewallet',name:'One Wallet',rate:1}],banks:JSON.parse(JSON.stringify(defaultBanks)),days:{},activity:[]};
 let state=loadState(); let formPayments=[]; let monthCursor=today().slice(0,7);
 
 function loadState(){
@@ -332,6 +362,7 @@ function loadState(){
       if(!x.days)x.days={};
       if(!x.profile)x.profile={bdeName:'',territory:'',adminPhone:''};
       if(!Array.isArray(x.banks)||!x.banks.length)x.banks=JSON.parse(JSON.stringify(defaultBanks));
+      if(x.balanceOpening===undefined)x.balanceOpening=null;
       return x;
     }
   }catch(e){}
@@ -351,6 +382,18 @@ function shortDate(s){let d=new Date(s+'T00:00:00');return d.toLocaleDateString(
 function sortedDates(){return Object.keys(state.days).sort()}
 function firstAfter(date){return sortedDates().find(d=>d>date)||null}
 function latestBefore(date){return sortedDates().filter(d=>d<date).pop()||null}
+/* Cumulative Outstanding/Excess: like opening stock, the very first anchor value is entered once (balanceOpening),
+   then each saved day's difference (short/excess) rolls forward automatically. */
+function cumulativeSeries(){
+  let ds=sortedDates(),running=n(state.balanceOpening),out=[];
+  ds.forEach(d=>{
+    let rec=state.days[d];
+    running+=n(rec.difference);
+    out.push({date:d,daily:rec.difference,cumulative:running});
+  });
+  return out;
+}
+function currentCumulativeBalance(){let s=cumulativeSeries();return s.length?s.at(-1).cumulative:n(state.balanceOpening)}
 function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
 
 /* ---------- Toast ---------- */
@@ -593,8 +636,10 @@ function refreshReports(){
     id('summaryDate').value=id('summaryDate').value||ds.at(-1);
     id('payFrom').value=id('payFrom').value||ds[0];
     id('payTo').value=id('payTo').value||ds.at(-1);
+    id('cumuFrom').value=id('cumuFrom').value||ds[0];
+    id('cumuTo').value=id('cumuTo').value||ds.at(-1);
   }
-  renderRange();renderPaymentReport();
+  renderRange();renderPaymentReport();renderCumulativeReport();
 }
 function renderRange(){
   let f=id('fromDate').value||'0000-00-00',t=id('toDate').value||'9999-99-99';
@@ -629,6 +674,20 @@ function renderPaymentReport(){
 }
 id('viewPayBtn').addEventListener('click',renderPaymentReport);
 
+function renderCumulativeReport(){
+  let now=currentCumulativeBalance();
+  id('cumuNowVal').textContent=money(now);
+  id('cumuNowBox').className='totalbox diff '+(Math.abs(now)<.005?'zero':'pos');
+  if(state.balanceOpening===null){
+    id('cumuBody').innerHTML='<tr><td colspan="3" class="empty">Set an Opening Balance in Settings first, then save daily entries to see the running balance here.</td></tr>';
+    return;
+  }
+  let f=id('cumuFrom').value||'0000-00-00',t=id('cumuTo').value||'9999-99-99';
+  let series=cumulativeSeries().filter(x=>x.date>=f&&x.date<=t);
+  id('cumuBody').innerHTML=series.length?series.map(x=>`<tr><td>${niceDate(x.date)}</td><td><span class="badge ${Math.abs(x.daily)<.005?'green':'red'}">${money(x.daily)}</span></td><td><span class="badge badge-lg ${Math.abs(x.cumulative)<.005?'green':'red'}">${money(x.cumulative)}</span></td></tr>`).join(''):'<tr><td colspan="3" class="empty">No records in selected range.</td></tr>';
+}
+id('viewCumuBtn').addEventListener('click',renderCumulativeReport);
+
 /* ---------- Settings: Profile & Items ---------- */
 function renderSettings(){
   id('bdeName').value=state.profile.bdeName||'';
@@ -646,7 +705,38 @@ function renderSettings(){
     showConfirm('Remove this item?',`Remove "${it.name||'this item'}" from the item list?`,()=>{state.items.splice(+b.dataset.i,1);renderSettings()},'Remove');
   }));
   renderBankSettings();
+  renderOpeningBalanceSetting();
 }
+function renderOpeningBalanceSetting(){
+  let locked=state.balanceOpening!==null;
+  let input=id('balanceOpening');
+  input.value=locked?state.balanceOpening:'';
+  input.readOnly=locked;
+  id('saveOpeningBalanceBtn').style.display=locked?'none':'inline-block';
+  id('unlockOpeningBalanceBtn').style.display=locked?'inline-block':'none';
+  id('cumuSettingHelp').textContent=locked
+    ?'Opening balance is locked (like a saved Opening Stock). Use "Unlock & Edit" only if you made a data-entry mistake — this will not recalculate days already saved, it only changes the starting point.'
+    :'This is the starting Cumulative Outstanding (short) or Excess balance, entered manually only once — like Opening Stock. After saving, this field locks automatically.';
+}
+id('saveOpeningBalanceBtn').addEventListener('click',()=>{
+  let v=id('balanceOpening').value;
+  if(v==='')return showMsg('Value required','Enter an opening balance (0.00 if starting fresh).');
+  showConfirm('Lock opening balance?',`This sets the starting Cumulative Outstanding/Excess balance to ${money(n(v))}. Like Opening Stock, this can only be entered once unless unlocked later. Continue?`,()=>{
+    state.balanceOpening=n(v);
+    log('SET_OPENING_BALANCE',{value:state.balanceOpening});
+    saveState();
+    toast('Opening balance saved.');
+    renderOpeningBalanceSetting();
+    renderDashboard();
+  },'Save & Lock');
+});
+id('unlockOpeningBalanceBtn').addEventListener('click',()=>{
+  showConfirm('Unlock opening balance?','This lets you edit the starting Cumulative Outstanding/Excess value again. Only do this to correct a mistake.',()=>{
+    state.balanceOpening=null;
+    saveState();
+    renderOpeningBalanceSetting();
+  },'Unlock');
+});
 id('saveProfileBtn').addEventListener('click',()=>{
   state.profile.bdeName=id('bdeName').value.trim();
   state.profile.territory=id('territory').value.trim();
